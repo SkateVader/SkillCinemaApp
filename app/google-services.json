@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "700890542870",
+    "project_id": "skillcinema-754e6",
+    "storage_bucket": "skillcinema-754e6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:700890542870:android:b0712f18fc138788145637",
+        "android_client_info": {
+          "package_name": "com.boardgames.skillcinema"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8nHmd_Ah_aU4iRbdcFsv6od6fxU52VmA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
