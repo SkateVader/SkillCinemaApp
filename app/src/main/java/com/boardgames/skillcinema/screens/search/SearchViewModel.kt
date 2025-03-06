@@ -35,7 +35,7 @@ class SearchViewModel @Inject constructor(
         lastSearchQuery = keyword
         viewModelScope.launch {
             if (keyword.isBlank()) {
-                Log.e("SearchViewModel", "Поисковый запрос пуст!")
+                Log.e("SearchViewModel", "Поисковый запрос пуст")
                 return@launch
             }
 
