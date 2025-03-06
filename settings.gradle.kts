@@ -1,18 +1,15 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()
         mavenCentral()
         gradlePluginPortal()
     }
+    plugins {
+        id("org.jetbrains.kotlin.kapt") version "1.9.25"
+    }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -21,4 +18,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "SkillCinema"
 include(":app")
- 
