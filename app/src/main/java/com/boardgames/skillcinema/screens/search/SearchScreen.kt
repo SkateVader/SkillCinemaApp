@@ -48,7 +48,7 @@ fun SearchScreen(navController: NavController) {
     LaunchedEffect(searchTrigger) {
         if (searchViewModel.lastSearchQuery.isNotBlank()) {
             searchViewModel.searchMovies(searchViewModel.lastSearchQuery, filters) { errorCode ->
-                // Обработка ошибок, если необходимо
+                // Обработка ошибок, если это необходимо
             }
         }
     }
