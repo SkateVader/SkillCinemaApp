@@ -18,7 +18,7 @@ object ApiModule {
     private const val BASE_URL = "https://kinopoiskapiunofficial.tech"
 
     // API-ключ должен быть строкой в английской раскладке без кириллических символов
-    private const val API_KEY = "f4534732-cf93-49ee-8fc2-df54261b8dc1"
+    private const val API_KEY = "f22ef637-738c-4537-b89d-5a8aab6fb6dc"
 
     //1    f22ef637-738c-4537-b89d-5a8aab6fb6dc
     //2    f952fe8f-1289-4260-b5f7-77a96e11b83b
@@ -26,6 +26,7 @@ object ApiModule {
     //4    48df8539-c428-4f01-ba45-c4bc804089ca
     //5    de155a79-9c0e-4890-92a6-239219fad3a8
     //6    f4534732-cf93-49ee-8fc2-df54261b8dc1
+    //7    d0e3296d-48db-4922-be82-04f28e857ce
 
     @Provides
     @Singleton

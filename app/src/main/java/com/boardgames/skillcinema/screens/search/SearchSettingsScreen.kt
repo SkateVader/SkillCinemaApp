@@ -10,11 +10,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,10 +29,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -44,6 +52,9 @@ fun SearchSettingsScreen(navController: NavController) {
     val countries by viewModel.countries.collectAsState()
     val genres by viewModel.genres.collectAsState()
 
+    // Локальное состояние для рейтинга; если фильтр не установлен, значение = null (то есть "Любой")
+    var localRating by remember { mutableStateOf(filters.rating) }
+
     val countryText = filters.country?.let { id ->
         countries.find { it.id == id }?.name ?: "Неизвестная страна"
     } ?: "Любая страна"
@@ -51,6 +62,13 @@ fun SearchSettingsScreen(navController: NavController) {
     val genreText = filters.genre?.let { id ->
         genres.find { it.id == id }?.genre ?: "Неизвестный жанр"
     } ?: "Любой жанр"
+
+    // Значения по умолчанию
+    val defaultFilters = SearchFilters()
+    // Формируем локальные фильтры с текущим значением рейтинга
+    val localFilters = filters.copy(rating = localRating)
+    // Флаг, указывающий, изменены ли настройки (учитывая также выбранный рейтинг)
+    val isChanged = localFilters != defaultFilters
 
     Scaffold(
         topBar = {
@@ -65,10 +83,39 @@ fun SearchSettingsScreen(navController: NavController) {
         },
         bottomBar = {
             Column {
+                // Кнопка "Сбросить настройки" – активна, если хоть одна настройка отличается от дефолтных
+                if (isChanged) {
+                    Button(
+                        onClick = {
+                            viewModel.updateFilters(defaultFilters)
+                            // Сброс локального значения рейтинга тоже
+                            localRating = defaultFilters.rating
+                            InMemorySearchSettings.triggerSearch()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        Text("Сбросить настройки", color = Color.White)
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.updateFilters(defaultFilters)
+                            localRating = defaultFilters.rating
+                            InMemorySearchSettings.triggerSearch()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        Text("Сбросить настройки", color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+                // Кнопка "Применить настройки" – закрывает экран настроек
                 Button(
                     onClick = {
-                        // Обновляем настройки и инициируем повторный запуск последнего запроса
-                        viewModel.updateFilters(filters)
+                        viewModel.updateFilters(filters.copy(rating = localRating))
                         InMemorySearchSettings.triggerSearch()
                         navController.navigateUp()
                     },
@@ -104,6 +151,36 @@ fun SearchSettingsScreen(navController: NavController) {
             SearchOptionCard("Жанр", genreText) { navController.navigate("search_genre") }
             SearchOptionCard("Год", filters.period.ifEmpty { "Любой год" }) { navController.navigate("search_period") }
 
+            // Блок настройки рейтинга с точностью до одной десятой
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Рейтинг",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = if (localRating == null) "Любой" else String.format("%.1f", localRating),
+                        modifier = Modifier.clickable { localRating = null },
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                val sliderValue = localRating ?: 5f
+                Slider(
+                    value = sliderValue,
+                    onValueChange = { newValue -> localRating = newValue },
+                    valueRange = 1f..10f,
+                    steps = 89,
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+
             Text("Сортировать", style = MaterialTheme.typography.bodyLarge)
 
             Row(
@@ -115,14 +192,24 @@ fun SearchSettingsScreen(navController: NavController) {
                 FilterChipCell("Рейтинг", filters.sortBy == "Рейтинг", { viewModel.updateSortBy("Рейтинг") }, Modifier.weight(1f))
             }
 
-            Button(
-                onClick = { viewModel.toggleNotWatched() },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (filters.notWatched) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Не просмотрено")
+            // Кнопка "Не просмотрен" всегда видна.
+            if (filters.notWatched) {
+                Button(
+                    onClick = { viewModel.toggleNotWatched() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Не просмотрен", color = Color.White)
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { viewModel.toggleNotWatched() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Не просмотрен", color = MaterialTheme.colorScheme.primary)
+                }
             }
         }
     }
@@ -135,7 +222,7 @@ fun FilterChipCell(label: String, isSelected: Boolean, onClick: () -> Unit, modi
             .clickable { onClick() }
             .background(
                 if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp)
             )
             .padding(vertical = 8.dp),
         contentAlignment = Alignment.Center
@@ -162,4 +249,3 @@ fun SearchOptionCard(label: String, value: String, onClick: () -> Unit) {
         }
     }
 }
-

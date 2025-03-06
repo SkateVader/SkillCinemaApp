@@ -10,5 +10,6 @@ data class SearchFilters(
     val genre: Int? = null,   // ID жанра; null = Любой жанр
     val period: String = "Любой год",
     val sortBy: String = "Популярность", // Сортировка по умолчанию – популярность
-    val notWatched: Boolean = false
+    val notWatched: Boolean = false,
+    val rating: Float? = null // Новый параметр: рейтинг с точностью до одной десятой; null = Любой рейтинг
 ) : Parcelable

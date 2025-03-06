@@ -18,11 +18,16 @@ import com.boardgames.skillcinema.navigation.BottomNavigationBar
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import com.boardgames.skillcinema.screens.collections.CollectionsViewModel
 
 @Composable
 fun SearchScreen(navController: NavController) {
     val searchViewModel: SearchViewModel = hiltViewModel()
     val settingsViewModel: SearchSettingsViewModel = hiltViewModel()
+    // Получаем список просмотренных фильмов
+    val collectionsViewModel: CollectionsViewModel = hiltViewModel()
+    val watchedList by collectionsViewModel.watched.collectAsState()
+
     val searchResults by searchViewModel.searchResults.collectAsState()
     val isLoading by searchViewModel.isLoading.collectAsState()
     val filters by settingsViewModel.filters.collectAsState()
@@ -48,9 +53,18 @@ fun SearchScreen(navController: NavController) {
     LaunchedEffect(searchTrigger) {
         if (searchViewModel.lastSearchQuery.isNotBlank()) {
             searchViewModel.searchMovies(searchViewModel.lastSearchQuery, filters) { errorCode ->
-                // Обработка ошибок, если это необходимо
+                // Обработка ошибок, если необходимо
             }
         }
+    }
+
+    // Фильтруем результаты, если установлен фильтр "не просмотрен"
+    val filteredMovies = if (filters.notWatched) {
+        searchResults?.items.orEmpty().filter { movie ->
+            watchedList.none { it.id == movie.id }
+        }
+    } else {
+        searchResults?.items.orEmpty()
     }
 
     Scaffold(
@@ -82,13 +96,17 @@ fun SearchScreen(navController: NavController) {
                             IconButton(
                                 onClick = { navController.navigate("search_settings") },
                                 colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = if (filters != SearchFilters()) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent
+                                    containerColor = if (filters != SearchFilters())
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                    else Color.Transparent
                                 )
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Settings,
                                     contentDescription = "Настройки поиска",
-                                    tint = if (filters != SearchFilters()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    tint = if (filters != SearchFilters())
+                                        MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -106,13 +124,13 @@ fun SearchScreen(navController: NavController) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else if (searchResults?.items.isNullOrEmpty()) {
+            } else if (filteredMovies.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Фильмы или сериалы не найдены")
                 }
             } else {
                 LazyColumn(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    items(searchResults?.items.orEmpty()) { movie ->
+                    items(filteredMovies) { movie ->
                         SearchMovieItem(movie) { selectedMovie ->
                             navController.navigate("details/${selectedMovie.id}")
                         }
@@ -122,5 +140,3 @@ fun SearchScreen(navController: NavController) {
         }
     }
 }
-
-

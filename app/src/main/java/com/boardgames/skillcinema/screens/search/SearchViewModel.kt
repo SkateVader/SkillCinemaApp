@@ -65,6 +65,10 @@ class SearchViewModel @Inject constructor(
                     yearTo = parts.getOrNull(1)?.toIntOrNull()
                 }
 
+                // Новый блок для рейтинга: если rating установлен, передаём его округлённое значение
+                val ratingFrom: Int? = filters.rating?.toInt()
+                val ratingTo: Int? = if (filters.rating != null) 10 else null
+
                 val response = api.searchMovies(
                     keyword = keyword,
                     type = typeParam,
@@ -72,6 +76,8 @@ class SearchViewModel @Inject constructor(
                     genres = filters.genre?.toString(),
                     yearFrom = yearFrom,
                     yearTo = yearTo,
+                    ratingFrom = ratingFrom,
+                    ratingTo = ratingTo,
                     order = order,
                     page = 1
                 )
