@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/diplom_android_lvl1.iml" filepath="$PROJECT_DIR$/.idea/diplom_android_lvl1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/SkillCinema.iml" filepath="$PROJECT_DIR$/.idea/modules/SkillCinema.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SkillCinema.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SkillCinema.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SkillCinema.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SkillCinema.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SkillCinema.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SkillCinema.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SkillCinema.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SkillCinema.app.unitTest.iml" />
     </modules>
   </component>
 </project>

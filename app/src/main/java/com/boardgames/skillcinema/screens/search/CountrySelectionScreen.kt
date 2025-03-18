@@ -2,11 +2,9 @@ package com.boardgames.skillcinema.screens.search
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,7 +33,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +47,8 @@ fun CountrySelectionScreen(navController: NavController) {
     var searchText by remember { mutableStateOf("") }
 
     // Добавляем "Любая страна" в начало списка
-    val filteredCountries = listOf(com.boardgames.skillcinema.data.remote.Country(name = "Любая страна", id = null)) +
+    val filteredCountries =
+        listOf(com.boardgames.skillcinema.data.remote.Country(name = "Любая страна", id = null)) +
             countries.filter {
                 it.name?.contains(searchText, ignoreCase = true) == true
             }
@@ -107,7 +105,8 @@ fun CountrySelectionScreen(navController: NavController) {
                         .fillMaxWidth()
                         .clickable {
                             // Если выбран "Любая страна", сохраняем null, иначе – выбранное значение (ID)
-                            val selectedId = if (country.name == "Любая страна") null else country.id
+                            val selectedId = if (country.name == "Любая страна")
+                                null else country.id
                             viewModel.updateCountry(selectedId)
                             navController.navigateUp()
                         }

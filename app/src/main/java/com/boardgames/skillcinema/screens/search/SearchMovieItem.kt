@@ -24,7 +24,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.boardgames.skillcinema.R
 import com.boardgames.skillcinema.data.remote.Movie
 import com.boardgames.skillcinema.screens.collections.CollectionsViewModel
-import com.boardgames.skillcinema.screens.details.MovieItemDetailsViewModel
+import com.boardgames.skillcinema.screens.moviesDetails.MovieItemDetailsViewModel
 
 @Composable
 fun SearchMovieItem(movie: Movie, onMovieClick: (Movie) -> Unit) {
@@ -44,7 +44,11 @@ fun SearchMovieItem(movie: Movie, onMovieClick: (Movie) -> Unit) {
         itemDetailsViewModel.loadDetails(movie.id)
     }
     val ratingsMap by itemDetailsViewModel.ratings.collectAsState()
-    val rating = ratingsMap[movie.id]?.let { String.format("%.1f", it) } ?: movie.ratingKinopoisk?.let { String.format("%.1f", it) }
+    val rating = ratingsMap[movie.id]?.let { ratingValue ->
+        "%.1f".format(ratingValue) // ratingValue уже Float
+    } ?: movie.ratingKinopoisk?.let { kinopoiskRating ->
+        "%.1f".format(kinopoiskRating) // kinopoiskRating уже Float
+    }
 
     Row(
         modifier = Modifier
@@ -87,7 +91,8 @@ fun SearchMovieItem(movie: Movie, onMovieClick: (Movie) -> Unit) {
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(6.dp)
-                        .background(Color.Black.copy(alpha = 0.8f), shape = RoundedCornerShape(4.dp))
+                        .background(Color.Black.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(4.dp))
                         .zIndex(2f)
                 ) {
                     Text(

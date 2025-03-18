@@ -11,18 +11,18 @@ data class OnboardingPage(
 
 val onboardingPages = listOf(
     OnboardingPage(
-        title = "Открывайте новые фильмы",
-        description = "Используйте удобный поиск и подборки",
-        imageRes = R.drawable.ic_onboarding1
+        title = "",
+        description = "Узнавай \nо премьерах",
+        imageRes = R.drawable.page1
     ),
     OnboardingPage(
-        title = "Собирайте коллекции",
-        description = "Добавляйте фильмы в любимые, создавайте свои подборки",
-        imageRes = R.drawable.ic_onboarding2
+        title = "",
+        description = "Создавай \nколлекции",
+        imageRes = R.drawable.page2
     ),
     OnboardingPage(
-        title = "Следите за новинками",
-        description = "Получайте свежую информацию о премьерах",
-        imageRes = R.drawable.ic_onboarding3
+        title = "",
+        description = "Делись \nс друзьями",
+        imageRes = R.drawable.page3
     )
 )

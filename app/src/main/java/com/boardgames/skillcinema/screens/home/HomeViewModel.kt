@@ -1,10 +1,14 @@
 package com.boardgames.skillcinema.screens.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.boardgames.skillcinema.data.remote.Movie
 import com.boardgames.skillcinema.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,27 +37,30 @@ class HomeViewModel @Inject constructor(
     private val _series = MutableStateFlow<UiState<List<Movie>>>(UiState.Loading)
     val series: StateFlow<UiState<List<Movie>>> = _series
 
+    private val _isDataLoaded = MutableStateFlow(false)
+    val isDataLoaded: StateFlow<Boolean> = _isDataLoaded
+
+
     init {
         loadAllMovies()
     }
 
     private fun loadAllMovies() {
-        loadTopMovies()
-        loadPopularMovies()
-        loadPremieres()
-        loadActionMovies()
-        loadDramaMovies()
-        loadSeries()
+        viewModelScope.launch {
+            val jobs = listOf(
+                async { loadTopMovies() },
+                async { loadPopularMovies() },
+                async { loadPremieres() },
+                async { loadActionMovies() },
+                async { loadDramaMovies() },
+                async { loadSeries() },
+                async { delay(1000) } // Минимальное время загрузки 1 секунда
+            )
+            jobs.awaitAll()
+            _isDataLoaded.value = true
+        }
     }
 
-    /**
-     * Фильтрует список фильмов или сериалов:
-     * - Если forSeries = true, оставляем только сериалы (movie.type == "TV_SERIES")
-     * - Иначе – только фильмы (если поле type отсутствует или movie.type != "TV_SERIES")
-     * Отбираются только элементы с заполненными данными (через movie.isCompleteData()).
-     * Если forceHasMore установлен, то hasMore = true, если отфильтрованный список содержит 20 или более элементов.
-     * В этом случае возвращается первые 20 элементов.
-     */
     private fun processMovies(
         movies: List<Movie>,
         forSeries: Boolean = false,
@@ -62,7 +69,8 @@ class HomeViewModel @Inject constructor(
         // Фильтруем фильмы по заполненности, исключаем те, у которых id == 0,
         // и применяем дополнительное условие для сериалов/фильмов.
         val filtered = movies.filter { movie ->
-            movie.isCompleteData() && movie.id != 0 &&
+            movie.isCompleteData() && movie.id != 0
+                    &&
                     if (forSeries) movie.type == "TV_SERIES" else movie.type != "TV_SERIES"
         }
         val hasMore = if (forceHasMore) filtered.size >= 20 else filtered.size > 20
@@ -74,13 +82,20 @@ class HomeViewModel @Inject constructor(
     fun loadTopMovies() {
         viewModelScope.launch {
             try {
-                val fullMovies = repository.getTopMovies() // Полный список для Топ-250 (250 фильмов)
-                val (displayed, hasMore) = processMovies(fullMovies, forSeries = false, forceHasMore = true)
+                val fullMovies =
+                    repository.getTopMovies() // Полный список для Топ-250 (250 фильмов)
+                val (displayed, hasMore) =
+                    processMovies(fullMovies, forSeries = false, forceHasMore = true)
                 _topMovies.value = if (displayed.isNotEmpty())
                     UiState.Success(displayed, hasMore)
-                else UiState.Error("Нет данных для Топ-250")
+                else {
+                    Log.e("HomeViewModel", "Нет данных для Топ-250")
+                    UiState.Error("Во время обработки запроса произошла ошибка")
+                }
+
             } catch (e: Exception) {
-                _topMovies.value = UiState.Error("Ошибка загрузки Топ-250: ${e.localizedMessage}")
+                Log.e("HomeViewModel", "Ошибка загрузки Топ-250: ${e.localizedMessage}")
+                _topMovies.value = UiState.Error("Во время обработки запроса произошла ошибка")
             }
         }
     }
@@ -88,13 +103,22 @@ class HomeViewModel @Inject constructor(
     fun loadPopularMovies() {
         viewModelScope.launch {
             try {
-                val fullMovies = repository.getPopularMovies() // Полный список для Популярного (100 фильмов)
-                val (displayed, hasMore) = processMovies(fullMovies, forSeries = false, forceHasMore = true)
+                val fullMovies =
+                    repository.getPopularMovies() // Полный список для Популярного (100 фильмов)
+                val (displayed, hasMore) =
+                    processMovies(fullMovies, forSeries = false, forceHasMore = true)
                 _popularMovies.value = if (displayed.isNotEmpty())
                     UiState.Success(displayed, hasMore)
-                else UiState.Error("Нет данных для Популярного")
+                else {
+                    Log.e("HomeViewModel", "Нет данных для Популярного")
+                    UiState.Error("Во время обработки запроса произошла ошибка")
+                }
             } catch (e: Exception) {
-                _popularMovies.value = UiState.Error("Ошибка загрузки Популярного: ${e.localizedMessage}")
+                Log.e(
+                    "HomeViewModel",
+                    "Ошибка загрузки Популярного: ${e.localizedMessage}"
+                )
+                _popularMovies.value = UiState.Error("Во время обработки запроса произошла ошибка")
             }
         }
     }
@@ -103,12 +127,17 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val fullMovies = repository.getPremieres()
-                val (displayed, hasMore) = processMovies(fullMovies, forSeries = false)
+                val (displayed, hasMore) =
+                    processMovies(fullMovies, forSeries = false)
                 _premieres.value = if (displayed.isNotEmpty())
                     UiState.Success(displayed, hasMore)
-                else UiState.Error("Нет данных для Премьер")
+                else {
+                    Log.e("HomeViewModel", "Нет данных для Премьер")
+                    UiState.Error("Во время обработки запроса произошла ошибка")
+                }
             } catch (e: Exception) {
-                _premieres.value = UiState.Error("Ошибка загрузки Премьер: ${e.localizedMessage}")
+                Log.e("HomeViewModel", "Ошибка загрузки Премьер: ${e.localizedMessage}")
+                _premieres.value = UiState.Error("Во время обработки запроса произошла ошибка")
             }
         }
     }
@@ -117,12 +146,20 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val fullMovies = repository.getActionMovies()
-                val (displayed, hasMore) = processMovies(fullMovies, forSeries = false)
+                val (displayed, hasMore) =
+                    processMovies(fullMovies, forSeries = false)
                 _actionMovies.value = if (displayed.isNotEmpty())
                     UiState.Success(displayed, hasMore)
-                else UiState.Error("Нет данных для Боевиков США")
+                else {
+                    Log.e("HomeViewModel", "Нет данных для Боевиков США")
+                    UiState.Error("Во время обработки запроса произошла ошибка")
+                }
             } catch (e: Exception) {
-                _actionMovies.value = UiState.Error("Ошибка загрузки Боевиков США: ${e.localizedMessage}")
+                Log.e(
+                    "HomeViewModel",
+                    "Ошибка загрузки Боевиков США: ${e.localizedMessage}"
+                )
+                _actionMovies.value = UiState.Error("Во время обработки запроса произошла ошибка")
             }
         }
     }
@@ -132,12 +169,20 @@ class HomeViewModel @Inject constructor(
             try {
                 val fullMovies = repository.getDramaMovies()
                 // Устанавливаем forceHasMore = true для Драм, чтобы если их ровно 20 или больше — кнопка "Показать все" отображалась.
-                val (displayed, hasMore) = processMovies(fullMovies, forSeries = false, forceHasMore = true)
+                val (displayed, hasMore) =
+                    processMovies(fullMovies, forSeries = false, forceHasMore = true)
                 _dramaMovies.value = if (displayed.isNotEmpty())
                     UiState.Success(displayed, hasMore)
-                else UiState.Error("Нет данных для Драм Франции")
+                else {
+                    Log.e("HomeViewModel", "Нет данных для Драм Франции")
+                    UiState.Error("Во время обработки запроса произошла ошибка")
+                }
             } catch (e: Exception) {
-                _dramaMovies.value = UiState.Error("Ошибка загрузки Драм Франции: ${e.localizedMessage}")
+                Log.e(
+                    "HomeViewModel",
+                    "Ошибка загрузки Драм Франции: ${e.localizedMessage}"
+                )
+                _dramaMovies.value = UiState.Error("Во время обработки запроса произошла ошибка")
             }
         }
     }
@@ -148,12 +193,17 @@ class HomeViewModel @Inject constructor(
                 val fullMovies = repository.getSeries()
                 // Для категории "Сериалы" устанавливаем forceHasMore = true, чтобы, если список содержит 20 или более,
                 // кнопка "Показать все" отображалась.
-                val (displayed, hasMore) = processMovies(fullMovies, forSeries = true, forceHasMore = true)
+                val (displayed, hasMore) =
+                    processMovies(fullMovies, forSeries = true, forceHasMore = true)
                 _series.value = if (displayed.isNotEmpty())
                     UiState.Success(displayed, hasMore)
-                else UiState.Error("Нет данных для Сериалов")
+                else {
+                    Log.e("HomeViewModel", "Нет данных для Сериалов")
+                    UiState.Error("Во время обработки запроса произошла ошибка")
+                }
             } catch (e: Exception) {
-                _series.value = UiState.Error("Ошибка загрузки Сериалов: ${e.localizedMessage}")
+                Log.e("HomeViewModel", "Ошибка загрузки Сериалов: ${e.localizedMessage}")
+                _series.value = UiState.Error("Во время обработки запроса произошла ошибка")
             }
         }
     }

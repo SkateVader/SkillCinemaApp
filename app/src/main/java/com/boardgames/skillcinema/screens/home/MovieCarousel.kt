@@ -71,9 +71,6 @@ fun MovieCarousel(
     }
 }
 
-
-
-
 @Composable
 fun ViewAllButton(onViewAll: () -> Unit, modifier: Modifier = Modifier) {
     Column(

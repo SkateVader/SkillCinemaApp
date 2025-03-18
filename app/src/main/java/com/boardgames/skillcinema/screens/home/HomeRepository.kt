@@ -5,9 +5,7 @@ import com.boardgames.skillcinema.data.remote.KinopoiskApi
 import com.boardgames.skillcinema.data.remote.Movie
 import retrofit2.HttpException
 import java.io.IOException
-import java.time.LocalDate
 import java.util.Calendar
-import java.util.Locale
 import javax.inject.Inject
 
 class HomeRepository @Inject constructor(
@@ -20,16 +18,20 @@ class HomeRepository @Inject constructor(
         return try {
             val response = api.getTopMovies()
             if (response.movies.isNullOrEmpty()) {
-                Log.e("HomeRepository", "Топ-250 фильмов пустой список! Ответ: ${response.toString()}")
+                Log.e("HomeRepository", "Топ-250 фильмов пустой список! Ответ: " +
+                        "${response.toString()}")
             } else {
-                Log.d("HomeRepository", "Топ-250 фильмов успешно загружены: ${response.movies.size} элементов")
+                Log.d("HomeRepository", "Топ-250 фильмов успешно загружены: " +
+                        "${response.movies.size} элементов")
             }
             response.movies?.filter { it.isCompleteData() } ?: emptyList()
         } catch (e: HttpException) {
-            Log.e("HomeRepository", "Ошибка HTTP при загрузке Топ-250: ${e.code()} ${e.message()}")
+            Log.e("HomeRepository", "Ошибка HTTP при загрузке Топ-250:" +
+                    " ${e.code()} ${e.message()}")
             emptyList()
         } catch (e: IOException) {
-            Log.e("HomeRepository", "Ошибка сети при загрузке Топ-250: ${e.localizedMessage}")
+            Log.e("HomeRepository", "Ошибка сети при загрузке Топ-250: " +
+                    "${e.localizedMessage}")
             emptyList()
         } catch (e: Exception) {
             Log.e("HomeRepository", "Ошибка при загрузке Топ-250: ${e.localizedMessage}")
@@ -41,10 +43,12 @@ class HomeRepository @Inject constructor(
         return try {
             val response = api.getPopularMovies(page = 1)
             if (response.movies.isNullOrEmpty()) {
-                Log.e("HomeRepository", "Популярные фильмы пустой список! Ответ: ${response.toString()}")
+                Log.e("HomeRepository", "Популярные фильмы пустой список! Ответ:" +
+                        " ${response.toString()}")
                 emptyList()
             } else {
-                Log.d("HomeRepository", "Популярные фильмы успешно загружены: ${response.movies.size} элементов")
+                Log.d("HomeRepository", "Популярные фильмы успешно загружены:" +
+                        " ${response.movies.size} элементов")
                 response.movies?.filter { it.isCompleteData() } ?: emptyList()
             }
         } catch (e: Exception) {
@@ -58,13 +62,16 @@ class HomeRepository @Inject constructor(
             val response = api.getPremieres(year = 2025, month = "FEBRUARY") // Используем правильный формат месяца
             response.movies?.filter { it.isCompleteData() } ?: emptyList()
         } catch (e: HttpException) {
-            Log.e("HomeRepository", "Ошибка HTTP при загрузке Премьер: ${e.code()} ${e.message()}")
+            Log.e("HomeRepository", "Ошибка HTTP при загрузке Премьер:" +
+                    " ${e.code()} ${e.message()}")
             emptyList()
         } catch (e: IOException) {
-            Log.e("HomeRepository", "Ошибка сети при загрузке Премьер: ${e.localizedMessage}")
+            Log.e("HomeRepository", "Ошибка сети при загрузке Премьер: " +
+                    "${e.localizedMessage}")
             emptyList()
         } catch (e: Exception) {
-            Log.e("HomeRepository", "Ошибка загрузки Премьер: ${e.localizedMessage}")
+            Log.e("HomeRepository", "Ошибка загрузки Премьер: " +
+                    "${e.localizedMessage}")
             emptyList()
         }
     }

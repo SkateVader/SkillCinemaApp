@@ -1,141 +1,168 @@
 package com.boardgames.skillcinema.screens.search
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.boardgames.skillcinema.navigation.BottomNavigationBar
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
+import com.boardgames.skillcinema.screens.ErrorOverlay
 import com.boardgames.skillcinema.screens.collections.CollectionsViewModel
 
 @Composable
 fun SearchScreen(navController: NavController) {
     val searchViewModel: SearchViewModel = hiltViewModel()
     val settingsViewModel: SearchSettingsViewModel = hiltViewModel()
+    // Получаем результаты поиска и настройки
+    val searchResults by searchViewModel.searchResults.collectAsState()
+    val personResults by searchViewModel.personResults.collectAsState()
+    val isLoading by searchViewModel.isLoading.collectAsState()
+    val errorMessage by searchViewModel.errorMessage.collectAsState()
+    val filters by settingsViewModel.filters.collectAsState()
+    val searchTrigger by InMemorySearchSettings.searchTriggerFlow.collectAsState()
+
     // Получаем список просмотренных фильмов
     val collectionsViewModel: CollectionsViewModel = hiltViewModel()
     val watchedList by collectionsViewModel.watched.collectAsState()
 
-    val searchResults by searchViewModel.searchResults.collectAsState()
-    val isLoading by searchViewModel.isLoading.collectAsState()
-    val filters by settingsViewModel.filters.collectAsState()
-    var searchQuery by remember { mutableStateOf("") }
-    // Собираем значение триггера, чтобы при его изменении повторно выполнять поиск
-    val searchTrigger by InMemorySearchSettings.searchTriggerFlow.collectAsState()
+    // Сохраняем поисковый запрос при навигации
+    var searchQuery by rememberSaveable { mutableStateOf("") }
 
-    // Реакция на изменения поискового запроса (с debounce)
-    LaunchedEffect(searchQuery) {
-        snapshotFlow { searchQuery }
-            .debounce(500L)
-            .distinctUntilChanged()
-            .collectLatest { query ->
-                if (query.isNotBlank()) {
-                    searchViewModel.searchMovies(query, filters) { errorCode ->
-                        // Обработка ошибок, если необходимо
-                    }
-                }
-            }
-    }
+    // Настройки по умолчанию для сравнения
+    val defaultFilters = SearchFilters()
+    // Подсвечиваем значок настроек, если настройки изменены
+    val settingsIconTint =
+        if (filters != defaultFilters) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurface
 
-    // Реакция на изменение триггера (например, после нажатия "Применить настройки")
-    LaunchedEffect(searchTrigger) {
-        if (searchViewModel.lastSearchQuery.isNotBlank()) {
-            searchViewModel.searchMovies(searchViewModel.lastSearchQuery, filters) { errorCode ->
-                // Обработка ошибок, если необходимо
-            }
+    // Запускаем поиск при изменении запроса, настроек или триггера
+    LaunchedEffect(searchQuery, filters, searchTrigger) {
+        if (searchQuery.isNotBlank()) {
+            searchViewModel.searchMovies(searchQuery, filters)
         }
-    }
-
-    // Фильтруем результаты, если установлен фильтр "не просмотрен"
-    val filteredMovies = if (filters.notWatched) {
-        searchResults?.items.orEmpty().filter { movie ->
-            watchedList.none { it.id == movie.id }
-        }
-    } else {
-        searchResults?.items.orEmpty()
     }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            // Поле ввода для поиска
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = { Text("Поиск") },
                     trailingIcon = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Divider(
-                                modifier = Modifier
-                                    .height(24.dp)
-                                    .width(1.dp),
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        IconButton(onClick = { navController.navigate("search_settings") }) {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = "Настройки поиска",
+                                tint = settingsIconTint
                             )
-                            IconButton(
-                                onClick = { navController.navigate("search_settings") },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = if (filters != SearchFilters())
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                    else Color.Transparent
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Settings,
-                                    contentDescription = "Настройки поиска",
-                                    tint = if (filters != SearchFilters())
-                                        MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
                         }
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Отображение состояния загрузки и результатов поиска
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (filteredMovies.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Фильмы или сериалы не найдены")
-                }
-            } else {
-                LazyColumn(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    items(filteredMovies) { movie ->
-                        SearchMovieItem(movie) { selectedMovie ->
-                            navController.navigate("details/${selectedMovie.id}")
+                if (isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    // Фильтруем фильмы по условию "не просмотрен"
+                    val filteredMovies = if (filters.notWatched) {
+                        searchResults?.movies.orEmpty().filter { movie ->
+                            !watchedList.any { it.id == movie.id }
+                        }
+                    } else {
+                        searchResults?.movies.orEmpty()
+                    }
+                    LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                        // Если выбраны "Фильмы" или "Сериалы", показываем только фильмы/сериалы
+                        if ((filters.showType == "Фильмы" || filters.showType == "Сериалы") &&
+                            filteredMovies.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Фильмы и сериалы",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                            items(filteredMovies) { movie ->
+                                SearchMovieItem(movie) { selectedMovie ->
+                                    navController.navigate("details/${selectedMovie.id}")
+                                }
+                            }
+                        }
+                        // Если выбран "Все", показываем сначала фильмы/сериалы, затем персоны
+                        if (filters.showType == "Все") {
+                            if (filteredMovies.isNotEmpty()) {
+                                item {
+                                    Text(
+                                        text = "Фильмы и сериалы",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                }
+                                items(filteredMovies) { movie ->
+                                    SearchMovieItem(movie) { selectedMovie ->
+                                        navController.navigate("details/${selectedMovie.id}")
+                                    }
+                                }
+                            }
+                            if (personResults.isNotEmpty()) {
+                                item {
+                                    Text(
+                                        text = "Люди",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                }
+                                items(personResults) { person ->
+                                    SearchPersonItem(person) { selectedPerson ->
+                                        navController.navigate("personDetails/${
+                                            selectedPerson.personId}")
+                                    }
+                                }
+                            }
+                        }
+                        if (filteredMovies.isEmpty() && personResults.isEmpty()) {
+                            item {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment =
+                                Alignment.Center) {
+                                    Text("Ничего не найдено")
+                                }
+                            }
                         }
                     }
                 }
+            }
+            errorMessage?.let { error ->
+                ErrorOverlay(errorMessage = error, onDismiss = { searchViewModel.clearError() })
             }
         }
     }

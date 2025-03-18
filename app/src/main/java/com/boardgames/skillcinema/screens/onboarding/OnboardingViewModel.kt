@@ -1,19 +1,19 @@
 package com.boardgames.skillcinema.screens.onboarding
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
-    private val repository: OnboardingRepository
-) : ViewModel() {
+    private val repository: OnboardingRepository,
+    application: Application
+) : AndroidViewModel(application) {
 
     val isOnboardingCompleted = repository.isOnboardingCompleted
-        .stateIn(viewModelScope, SharingStarted.Lazily, false)
 
     fun completeOnboarding() {
         viewModelScope.launch {

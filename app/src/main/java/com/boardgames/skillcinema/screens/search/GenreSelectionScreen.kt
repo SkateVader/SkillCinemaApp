@@ -2,7 +2,6 @@ package com.boardgames.skillcinema.screens.search
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,7 +26,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.boardgames.skillcinema.navigation.BottomNavigationBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -103,7 +101,8 @@ fun GenreSelectionScreen(navController: NavController) {
                         .fillMaxWidth()
                         .clickable {
                             // Если выбран "Любой жанр", сохраняем null, иначе – выбранный ID жанра
-                            val selectedId = if (genre.genre == "Любой жанр") null else genre.id
+                            val selectedId = if (genre.genre == "Любой жанр")
+                                null else genre.id
                             viewModel.updateGenre(selectedId)
                             navController.navigateUp()
                         }

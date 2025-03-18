@@ -1,13 +1,15 @@
 package com.boardgames.skillcinema.screens.home
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,11 +21,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import com.boardgames.skillcinema.R
 import com.boardgames.skillcinema.data.remote.Movie
 import com.boardgames.skillcinema.screens.collections.CollectionsViewModel
-import com.boardgames.skillcinema.screens.details.MovieItemDetailsViewModel
+import com.boardgames.skillcinema.screens.moviesDetails.MovieItemDetailsViewModel
 
 @Composable
 fun MovieItem(
@@ -32,20 +34,17 @@ fun MovieItem(
 ) {
     val title = movie.title ?: "Название отсутствует"
     val imageUrl = movie.imageUrl
+    val genre = movie.genre
 
-    // Получаем CollectionsViewModel для проверки просмотренных фильмов
     val collectionsViewModel: CollectionsViewModel = hiltViewModel()
     val watchedList by collectionsViewModel.watched.collectAsState()
     val isWatched = watchedList.any { it.id == movie.id }
 
-    // Получаем общий экземпляр MovieItemDetailsViewModel
     val itemDetailsViewModel: MovieItemDetailsViewModel = hiltViewModel()
-    // Загружаем рейтинг для данного фильма (если ещё не загружен)
     LaunchedEffect(movie.id) {
         itemDetailsViewModel.loadDetails(movie.id)
     }
     val ratingsMap by itemDetailsViewModel.ratings.collectAsState()
-    // Если в кэше есть рейтинг для movie.id, берем его, иначе используем значение из movie
     val rating = ratingsMap[movie.id] ?: movie.ratingKinopoisk
 
     Column(
@@ -61,8 +60,8 @@ fun MovieItem(
                 .clip(RoundedCornerShape(8.dp))
         ) {
             if (!imageUrl.isNullOrBlank()) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = imageUrl),
+                AsyncImage(
+                    model = imageUrl,
                     contentDescription = title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -80,13 +79,13 @@ fun MovieItem(
                     )
                 }
             }
-            // Отображаем рейтинг, если он есть
             rating?.let {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(4.dp)
-                        .background(Color.Black.copy(alpha = 0.7f), shape = RoundedCornerShape(4.dp))
+                        .background(Color.Black.copy(alpha = 0.7f),
+                            shape = RoundedCornerShape(4.dp))
                         .zIndex(2f)
                 ) {
                     Text(
@@ -97,7 +96,6 @@ fun MovieItem(
                     )
                 }
             }
-            // Отображаем иконку "просмотрено", если фильм отмечен
             if (isWatched) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_eye),
@@ -115,6 +113,13 @@ fun MovieItem(
         Text(
             text = title,
             fontSize = 14.sp,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Start
+        )
+        Text(
+            text = genre,
+            fontSize = 12.sp,
+            color = Color.Gray,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Start
         )

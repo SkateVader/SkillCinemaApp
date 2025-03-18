@@ -30,15 +30,47 @@ interface KinopoiskApi {
     @GET("/api/v2.2/films/filters")
     suspend fun getCountries(): CountryResponse
 
+    @GET("/api/v2.2/films/{filmId}")
+    suspend fun getMovie(
+        @Path("filmId") filmId: Int
+    ): Movie
+
+    @GET("/api/v2.2/films/{id}/images")
+    suspend fun getMovieImages(
+        @Path("id") id: Int,
+        @Query("type") type: String
+    ): GalleryResponse
+
+    @GET("/api/v2.2/films/{id}/seasons")
+    suspend fun getSeriesEpisodes(
+        @Path("id") movieId: Int
+    ): SeriesEpisodesResponse
+
     @GET("/api/v2.2/films/{id}")
     suspend fun getMovieDetails(
         @Path("id") id: Int
     ): MovieDetailsResponse
 
+    @GET("/api/v1/staff/{id}")
+    suspend fun getPersonDetail(
+        @Path("id") personId: Int
+    ): PersonDetailResponse
+
+    @GET("/api/v1/persons")
+    suspend fun searchPersons(
+        @Query("name") name: String,
+        @Query("page") page: Int
+    ): PersonSearchResponse
+
     @GET("/api/v1/staff")
     suspend fun getMovieCast(
-        @Query("filmId") id: Int
-    ): List<CastMember>
+        @Query("filmId") filmId: Int
+    ): List<CastResponse>
+
+    @GET("/api/v1/staff")
+    suspend fun getCrew(
+        @Query("filmId") filmId: Int
+    ): List<CrewResponse>
 
     @GET("/api/v2.2/films/{id}/images")
     suspend fun getMovieGallery(
