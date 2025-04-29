@@ -63,37 +63,43 @@ fun HomeScreen(navController: NavController) {
                     title = "Топ-250",
                     uiState = topMoviesState,
                     onMovieClick = { movie -> navController.navigate("details/${movie.id}") },
-                    onViewAll = { navController.navigate("fullCollection/Топ-250/TOP_250_BEST_FILMS") }
+                    onViewAll = { navController.navigate("" +
+                            "fullCollection/Топ-250/TOP_250_BEST_FILMS/0") }
                 )
                 MovieCarousel(
                     title = "Популярное",
                     uiState = popularMoviesState,
                     onMovieClick = { movie -> navController.navigate("details/${movie.id}") },
-                    onViewAll = { navController.navigate("fullCollection/Популярное/TOP_100_POPULAR_FILMS") }
+                    onViewAll = { navController.navigate("" +
+                            "fullCollection/Популярное/TOP_100_POPULAR_FILMS/0") }
                 )
                 MovieCarousel(
                     title = "Премьеры",
                     uiState = premieresState,
                     onMovieClick = { movie -> navController.navigate("details/${movie.id}") },
-                    onViewAll = { navController.navigate("fullCollection/Премьеры/PREMIERES") }
+                    onViewAll = { navController.navigate("" +
+                            "fullCollection/Премьеры/PREMIERES/0") }
                 )
                 MovieCarousel(
                     title = "Боевики США",
                     uiState = actionMoviesState,
                     onMovieClick = { movie -> navController.navigate("details/${movie.id}") },
-                    onViewAll = { navController.navigate("fullCollection/Боевики США/ACTION") }
+                    onViewAll = { navController.navigate("" +
+                            "fullCollection/Боевики США/ACTION/0") }
                 )
                 MovieCarousel(
                     title = "Драмы Франции",
                     uiState = dramaMoviesState,
                     onMovieClick = { movie -> navController.navigate("details/${movie.id}") },
-                    onViewAll = { navController.navigate("fullCollection/Драмы Франции/DRAMA") }
+                    onViewAll = { navController.navigate("" +
+                            "fullCollection/Драмы Франции/DRAMA/0") }
                 )
                 MovieCarousel(
                     title = "Сериалы",
                     uiState = seriesState,
                     onMovieClick = { movie -> navController.navigate("details/${movie.id}") },
-                    onViewAll = { navController.navigate("fullCollection/Сериалы/TV_SERIES") }
+                    onViewAll = { navController.navigate("" +
+                            "fullCollection/Сериалы/TV_SERIES/0") }
                 )
             }
             if (showErrorOverlay && errorMessage != null) {
